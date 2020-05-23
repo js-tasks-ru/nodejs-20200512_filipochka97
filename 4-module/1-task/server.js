@@ -1,6 +1,7 @@
 const url = require('url');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 
 const server = new http.Server();
 
@@ -11,6 +12,19 @@ server.on('request', (req, res) => {
 
   switch (req.method) {
     case 'GET':
+      if (isPathNested(pathname)) {
+        res.statusCode = 400;
+        res.end();
+        return;
+      }
+
+      if (fs.existsSync(filepath)) {
+        const fileStream = fs.createReadStream(filepath);
+        fileStream.pipe(res);
+      } else {
+        res.statusCode = 404;
+        res.end('Not found');
+      }
 
       break;
 
@@ -19,5 +33,9 @@ server.on('request', (req, res) => {
       res.end('Not implemented');
   }
 });
+
+function isPathNested(pathname) {
+  return pathname.includes('/');
+}
 
 module.exports = server;
